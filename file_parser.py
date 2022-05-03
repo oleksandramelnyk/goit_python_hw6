@@ -52,27 +52,35 @@ UNKNOWN = set()
 
 
 def get_extension(filename: str) -> str:
+    # превращаем расширение файла в название папки .jpg -> JPG
     return Path(filename).suffix[1:].upper()
 
 
 def scan(folder: Path) -> None:
     for item in folder.iterdir():
+        # Если это папка то добавляем ее с список FOLDERS и преходим к следующему элементу папки
         if item.is_dir():
+            # проверяем, чтобы папка не была той в которую мы складываем уже файлы
             if item.name not in ('archives', 'video', 'audio', 'documents', 'images', 'other_files'):
                 FOLDERS.append(item)
+                #  сканируем эту вложенную папку - рекурсия
                 scan(item)
+            #  перейти к следующему элементу в сканируемой папке
             continue
 
+        # Пошла работа с файлом
         ext = get_extension(item.name)
         fullname = folder / item.name
-        if not ext:
+        if not ext:  # если у файла нет расширения добавить к неизвестным
             OTHER_FILES.append(fullname)
         else:
             try:
+                # взять список куда положить полный путь к файлу
                 container = REGISTER_EXTENSIONS[ext]
                 EXTENSIONS.add(ext)
                 container.append(fullname)
             except KeyError:
+                # Если мы не регистрировали расширение в REGISTER_EXTENSIONS, то добавить в другое
                 UNKNOWN.add(ext)
                 OTHER_FILES.append(fullname)
 
